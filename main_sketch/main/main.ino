@@ -26,44 +26,37 @@ void setup() {
     mqtt_client.onMessage(MQTTmessageReceived);
 }
 
-void MQTTmessageReceived(String &topic, String &payload) {
-  char char_array[payload.length() + 1];
-  strcpy(char_array, payload.c_str());
-  
+void MQTTmessageReceived(String &topic, String &payload) {  
   Serial.print("Received message ");
   Serial.print(payload);
   Serial.print(" on topic ");
   Serial.println(topic);
 
-  if(topic == "/config"){
-    parse_settings(char_array);
+  DeserializationError error;
+  error = deserializeJson(json_input, payload.c_str());
+  if (error == DeserializationError::Ok){
+      if(topic == "/config"){
+        if(validate_settings(json_input["min"], json_input["max"])){
+        update_settings(json_input["min"], json_input["max"]);
+      }
+    }
   }
 }
 
-int is_number(char *string, uint32_t size){
-  for(int i=0; i<size && string[i]!='\0'; i++){
+void update_settings(const char *min, const char *max){
+  min_number=atoi(min);
+  max_number=atoi(max);
+}
+
+int validate_settings(const char *min, const char *max){
+  return(is_number(min) && is_number(max));
+}
+
+int is_number(const char *string){
+  for(int i=0; i<strlen(string) && string[i]!='\0'; i++){
     if(!isdigit(string[i])) return 0;
   }
   return 1;
-}
-
-int parse_settings(char *command){
-  char *token;
-  int tmp_min_number, tmp_max_number;
-  token = strtok(command, " ");
-  if (token == NULL) return -1;
-  if (!is_number(token, strlen(token))) return -1;
-  tmp_min_number = atoi(token);
-  
-  token = strtok(NULL, " ");
-  if (token == NULL) return -1;
-  if (!is_number(token, strlen(token))) return -1;
-  tmp_max_number = atoi(token);
-
-  min_number=tmp_min_number;
-  max_number=tmp_max_number;
-  
-  return 0;
 }
 
 void main_operation(){
