@@ -1,0 +1,98 @@
+#include <MQTT.h>
+#include "wifi_connection.h"
+#include "wireguard_connection.h"
+#include "esp_random.h"
+#include "ctype.h"
+
+#define UDP_PORT 5555
+#define UDP_BUFF_SIZE 32
+
+TaskHandle_t Task1;
+TaskHandle_t Task2;
+
+WiFiClient net;
+MQTTClient mqtt_client;
+MQTT_broker_ip = "192.168.1.110":
+MQTT_broker_port = 1234;
+
+int min_number=-10, max_number=20;
+
+void setup() {
+    Serial.begin(115200);
+
+    init_wifi();
+    init_wireguard_interface();
+    init_mqtt_client();
+
+    mqtt_client.onMessage(MQTTmessageReceived);
+
+
+    //Create UDPReceiver Task
+    xTaskCreate(UDPReceiver, "UDPReceiver", 1500, NULL, 1, &Task1);
+    delay(5000);
+}
+
+void MQTTmessageReceived(String &topic, String &payload) {
+  Serial.println("incoming: " + topic + " - " + payload);
+
+}
+
+int is_number(char *string, uint32_t size){
+  for(int i=0; i<size && string[i]!='\0'; i++){
+    if(!isdigit(string[i])) return 0;
+  }
+  return 1;
+}
+
+int parse_settings(char *command){
+  char *token;
+  int tmp_min_number, tmp_max_number;
+  token = strtok(command, " ");
+  if (token == NULL) return -1;
+  if (!is_number(token, strlen(token))) return -1;
+  tmp_min_number = atoi(token);
+  
+  token = strtok(NULL, " ");
+  if (token == NULL) return -1;
+  if (!is_number(token, strlen(token))) return -1;
+  tmp_max_number = atoi(token);
+
+  min_number=tmp_min_number;
+  max_number=tmp_max_number;
+  
+  return 0;
+}
+
+void UDPReceiver( void * pvParameters ){
+  Custom_WiFiUDP udp;
+  udp.begin(UDP_PORT);
+  char rx_buffer[UDP_BUFF_SIZE];
+  
+  for(;;){
+    while(udp.parsePacket() == 0);
+    memset(rx_buffer, '\0', UDP_BUFF_SIZE);
+    udp.read_line(rx_buffer, UDP_BUFF_SIZE-1);
+    Serial.println(rx_buffer);
+    parse_settings(rx_buffer);
+  }
+}
+
+void main_operation(){
+  const char * udpAddress = "10.0.0.1";
+  const int udpPort = 3333;
+  
+  Custom_WiFiUDP udp;
+  long number;
+  for(;;){
+    number = random(min_number, max_number);
+    udp.beginPacket(udpAddress,udpPort);
+    udp.printf("number");
+    udp.endPacket();
+    Serial.println(number);
+    delay(4000);
+  }
+}
+
+void loop() {
+  main_operation();
+}
