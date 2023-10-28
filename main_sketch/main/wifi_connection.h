@@ -38,7 +38,7 @@ const char* identity = UNI_IDENTITY;
 const char* password = "";
 const char* test_root_ca = "";
 #elif defined(HOTSPOT)
-const char* ssid = HOSTSPOT_SSID;
+const char* ssid = HOTSPOT_SSID;
 const char* password = HOTSPOT_PASSWORD;
 #endif
 
