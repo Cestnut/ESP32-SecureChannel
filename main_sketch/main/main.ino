@@ -1,6 +1,7 @@
 #include "mqtt_connection.h"
 #include "wifi_connection.h"
 #include "wireguard_connection.h"
+#include "utils.h"
 #include "esp_random.h"
 #include "ctype.h"
 #include "ArduinoJson.h"
@@ -22,7 +23,7 @@ void setup() {
     init_wireguard_interface();
     init_mqtt_client();
 
-    mqtt_client.subscribe("/config");
+    mqtt_client.subscribe("/config/device1");
     mqtt_client.onMessage(MQTTmessageReceived);
 }
 
@@ -64,6 +65,7 @@ void main_operation(){
   char json_serialized[100];  
   number = random(min_number, max_number);
   json_output["number"] = number;
+  json_output["timestamp"] = get_unix_epoch();
   serializeJson(json_output, json_serialized);
 
   mqtt_client.publish(publish_topic, json_serialized);
