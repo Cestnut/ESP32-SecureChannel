@@ -20,6 +20,8 @@ void setup() {
     Serial.begin(115200);
 
     init_wifi();
+    configTime(2 * 60 * 60, 0, "pool.ntp.org", "time.google.com");
+    syncTime();
     init_wireguard_interface();
     init_mqtt_client();
 
