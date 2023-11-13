@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  mongodb:
+    container_name: "eclipse-mosquitto"
+    image: eclipse-mosquitto
+    ports:
+      - "10.0.0.1:1234:9001"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
