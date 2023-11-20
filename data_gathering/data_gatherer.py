@@ -10,7 +10,6 @@ def mongo_init(host, port, username, password, db_name):
                      authMechanism='SCRAM-SHA-256')
     database = client[db_name]
     return database
-database = mongo_init("10.0.0.1", 27017, "GATHERER_USERNAME","GATHERER_PASSWORD", "IoT_network")
 
 
 # The callback for when the client receives a CONNACK response from the server.
@@ -37,6 +36,8 @@ def on_message(client, userdata, msg):
 
 def main():
     MQTT_broker_IP = "10.0.0.1"
+    global database
+    database = mongo_init("10.0.0.1", 27017, "GATHERER_USERNAME","GATHERER_PASSWORD", "IoT_network")
     client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
