@@ -17,7 +17,6 @@ database = mongo_init("10.0.0.1", 27017, "GATHERER_USERNAME","GATHERER_PASSWORD"
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
     client.subscribe("/data/+")
-    client.subscribe("/config/+")
 
 
 # The callback for when a PUBLISH message is received from the server.
@@ -33,13 +32,6 @@ def on_message(client, userdata, msg):
             data["device_name"] = device_name
             print(data)
             data_collection.insert_one(data)
-        elif(msg.topic.startswith('/config/')):
-            device_name = msg.topic.split("/config/")[1]
-            data_collection = database["config"]
-            data["device_name"] = device_name
-            print(data)
-            data_collection.insert_one(data)
-
     except json.decoder.JSONDecodeError as e:
         print("An exception occurred: {}".format(e))
 
