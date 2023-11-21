@@ -13,6 +13,7 @@ TaskHandle_t Task2;
 
 int min_number=-10, max_number=20;
 char publish_topic[] = "/data/device1";
+char command_topic[] = "/config/device1";
 StaticJsonDocument<100> json_output;
 StaticJsonDocument<100> json_input;
 
@@ -25,7 +26,7 @@ void setup() {
     init_wireguard_interface();
     init_mqtt_client();
 
-    mqtt_client.subscribe("/config/device1");
+    mqtt_client.subscribe(command_topic);
     mqtt_client.onMessage(MQTTmessageReceived);
 }
 
@@ -38,7 +39,7 @@ void MQTTmessageReceived(String &topic, String &payload) {
   DeserializationError error;
   error = deserializeJson(json_input, payload.c_str());
   if (error == DeserializationError::Ok){
-      if(topic == "/config"){
+      if(topic == command_topic){
         if(validate_settings(json_input["min"], json_input["max"])){
         update_settings(json_input["min"], json_input["max"]);
       }
