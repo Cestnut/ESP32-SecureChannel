@@ -1,13 +1,12 @@
 #include <MQTT.h>
 #include <WiFi.h>
+#include "credentials.h"
 
 WiFiClient net;
 MQTTClient mqtt_client;
-const char* MQTT_broker_ip = "10.0.0.1";
-int MQTT_broker_port = 1234;
 
 void init_mqtt_client() {
-  mqtt_client.begin(MQTT_broker_ip, MQTT_broker_port, net);
+  mqtt_client.begin(MQTT_BROKER_IP, MQTT_BROKER_PORT, net);
 
   Serial.print("\nconnecting...");
   while (!mqtt_client.connect("")) {

@@ -38,8 +38,8 @@ const char* identity = UNI_IDENTITY;
 const char* password = "";
 const char* test_root_ca = "";
 #elif defined(HOTSPOT)
-const char* ssid = HOTSPOT_SSID;
-const char* password = HOTSPOT_PASSWORD;
+const char* ssid = WIFI_SSID;
+const char* password = WIFI_PASSWORD;
 #endif
 
 void init_wifi(){
