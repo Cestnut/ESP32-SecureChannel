@@ -9,7 +9,7 @@ void init_mqtt_client() {
   mqtt_client.begin(MQTT_BROKER_IP, MQTT_BROKER_PORT, net);
 
   Serial.print("\nconnecting...");
-  while (!mqtt_client.connect("")) {
+  while (!mqtt_client.connect("", MQTT_USERNAME, MQTT_PASSWORD)) {
     Serial.println("Connecting to MQTT broker...");
     delay(2000);
   }

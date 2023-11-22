@@ -8,3 +8,5 @@ services:
       - "10.0.0.1:1234:9001"
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./password_file:/etc/mosquitto/password_file
+      - ./acl_file:/etc/mosquitto/acl_file

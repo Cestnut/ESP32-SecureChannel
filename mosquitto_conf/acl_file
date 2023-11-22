@@ -1,0 +1,5 @@
+pattern read /config/%u
+pattern write /data/%u
+
+user user
+topic readwrite #

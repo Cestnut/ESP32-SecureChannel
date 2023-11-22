@@ -41,6 +41,7 @@ def main():
     client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
+    client.username_pw_set("user", password="password")
     client.connect(MQTT_broker_IP, 1234, 60)
     client.loop_forever()
 
