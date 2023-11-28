@@ -1,10 +1,9 @@
 #include "mqtt_connection.h"
 #include "wifi_connection.h"
 #include "wireguard_connection.h"
-#include "utils.h"
 #include "esp_random.h"
-#include "ctype.h"
 #include "ArduinoJson.h"
+#include "utils.h"
 #define UDP_PORT 5555
 #define UDP_BUFF_SIZE 32
 
@@ -17,17 +16,23 @@ char command_topic[] = "/config/device1";
 StaticJsonDocument<100> json_output;
 StaticJsonDocument<100> json_input;
 
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP);
+
 void setup() {
     Serial.begin(115200);
 
     init_wifi();
     configTime(2 * 60 * 60, 0, "pool.ntp.org", "time.google.com");
-    syncTime();
+    timeClient.begin();
+    timeClient.update();
+
     init_wireguard_interface();
     init_mqtt_client();
 
     mqtt_client.subscribe(command_topic);
     mqtt_client.onMessage(MQTTmessageReceived);
+
 }
 
 void MQTTmessageReceived(String &topic, String &payload) {  
@@ -68,15 +73,19 @@ void main_operation(){
   char json_serialized[100];  
   number = random(min_number, max_number);
   json_output["number"] = number;
-  json_output["timestamp"] = get_unix_epoch();
+  json_output["timestamp"] = (uint64_t)timeClient.getEpochTime()*1000LL + (uint64_t)timeClient.get_millis();
   serializeJson(json_output, json_serialized);
 
   mqtt_client.publish(publish_topic, json_serialized);
   Serial.println(json_serialized);
-  delay(4000);
 }
 
 void loop() {
   mqtt_client.loop();
   main_operation();
+  if(!(mqtt_client.connected())){
+    connect_mqtt();
+  }
+  
+  improved_delay(1000, timeClient);
 }
