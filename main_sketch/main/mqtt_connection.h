@@ -1,6 +1,7 @@
 #include <MQTT.h>
 #include <WiFi.h>
 #include "credentials.h"
+#include "config.h"
 
 WiFiClient net;
 MQTTClient mqtt_client;
