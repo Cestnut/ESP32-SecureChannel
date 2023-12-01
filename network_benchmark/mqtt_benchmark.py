@@ -3,50 +3,42 @@ import paho.mqtt.client as mqtt
 import time
 import math
 
-batch_sizes = [1,5,10,50,100,500]
+batch_sizes = [1,5,10,50,100]
+max_messages_number = batch_sizes[-1]
+
 received_messages_number = 0
-begin_timestamp = 0
-begin_counter = 0
-current_iteration = 0
+first_send_timestamp = 0
+first_recv_timestamp = 0
+
 times_list = list()
+arrivals_list = list()
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
     client.subscribe("/data/device1")
 
 def on_message(client, userdata, msg):
-    #print(math.floor(time.time()*1000))
     recv_timestamp = math.floor(time.time()*1000)
-    recv_counter = math.floor(time.perf_counter()*1000)
+    
     data = json.loads(msg.payload)
     send_timestamp = data["timestamp"]
 
-    #print("send_timestamp:{} recv_timestamp:{} makes_sense:{} offset:{}".format(send_timestamp, recv_timestamp, recv_timestamp>send_timestamp, recv_timestamp-send_timestamp))
-
     global received_messages_number
-    global begin_timestamp
-    global begin_counter
-    global current_iteration
+    global first_send_timestamp
+    global first_recv_timestamp
+    global max_messages_number
+    global batch_sizes
 
     if received_messages_number == 0:
-        begin_timestamp = send_timestamp
-        begin_counter = math.floor(time.perf_counter()*1000)
-        begin_counter = begin_counter - (recv_timestamp - begin_timestamp)
-        #print(begin_timestamp)
-
-    if current_iteration < len(batch_sizes):
-        max_messages_number = batch_sizes[current_iteration]
+        first_send_timestamp = send_timestamp
+        first_recv_timestamp = recv_timestamp
 
     if received_messages_number < max_messages_number:
         received_messages_number = received_messages_number + 1
-        #print("{} {} {}".format(received_messages_number, send_timestamp, recv_timestamp))
-        if received_messages_number == max_messages_number:
-            print("{} {} {} {} {}".format(send_timestamp, recv_timestamp, recv_timestamp-send_timestamp, recv_timestamp-begin_timestamp, recv_counter-begin_counter))
-            #print(recv_timestamp - begin_timestamp)
-            current_iteration = current_iteration + 1
-            received_messages_number = 0
-            times_list.append(recv_counter - begin_counter)
-    #print("\n")
+        arrivals_list.append(recv_timestamp)
+        if received_messages_number in batch_sizes:
+            print("{} {} {} {} {} {}".format(received_messages_number, send_timestamp, recv_timestamp, recv_timestamp-send_timestamp, recv_timestamp-first_send_timestamp, recv_timestamp - first_recv_timestamp))
+            times_list.append([recv_timestamp - first_send_timestamp, recv_timestamp - first_recv_timestamp])
 
 def main():
     MQTT_broker_IP = "10.0.0.1"
@@ -57,12 +49,17 @@ def main():
     client.connect(MQTT_broker_IP, 1234, 60)
 
     with open("{}_mqtt_benchmark_results".format(MQTT_broker_IP), "w") as output_file:
-        output_file.write("TOTAL TIME\n")
-        while current_iteration < len(batch_sizes): client.loop()
+        output_file.write("MESSAGES_NUMBER TOTAL_TIME PARTIAL_TIME\n")
+        while received_messages_number < max_messages_number: client.loop()
         for i in range(len(times_list)):
-            print(i)
-            output = "{} {}\n".format(batch_sizes[i], times_list[i]-((batch_sizes[i]-1)*1000))
+            output = "{} {} {}\n".format(batch_sizes[i], times_list[i][0], times_list[i][1])
             output_file.write(output)
+        
+        latency = list()
+        for i in range(len(arrivals_list)-1):
+            latency.append(arrivals_list[i+1]-arrivals_list[i])
+
+    print(latency)
     print(times_list)
     client.disconnect()    
 
