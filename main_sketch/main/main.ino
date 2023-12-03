@@ -4,6 +4,8 @@
 #include "esp_random.h"
 #include "ArduinoJson.h"
 #include "utils.h"
+#include <NTPClient.h>
+
 
 int min_number=-10, max_number=20;
 WiFiUDP ntpUDP;
@@ -11,7 +13,7 @@ NTPClient timeClient(ntpUDP);
 
 void setup() {
     Serial.begin(115200);
-
+    
     init_wifi();
     configTime(2 * 60 * 60, 0, "pool.ntp.org", "time.google.com");
     timeClient.begin();
@@ -35,20 +37,22 @@ void MQTTmessageReceived(String &topic, String &payload) {
   DeserializationError error;
   error = deserializeJson(json_input, payload.c_str());
   if (error == DeserializationError::Ok){
-      if(topic == COMMAND_TOPIC){
-        if(validate_settings(json_input["min"], json_input["max"])){
-        update_settings(json_input["min"], json_input["max"]);
+    if(topic == COMMAND_TOPIC){
+      if(json_input["command_type"] == "new_range"){
+        if(validate_settings_range(json_input["min"], json_input["max"])){
+        update_settings_range(json_input["min"], json_input["max"]);
+        }
       }
     }
   }
 }
 
-void update_settings(const char *min, const char *max){
+void update_settings_range(const char *min, const char *max){
   min_number=atoi(min);
   max_number=atoi(max);
 }
 
-int validate_settings(const char *min, const char *max){
+int validate_settings_range(const char *min, const char *max){
   return(is_number(min) && is_number(max));
 }
 
@@ -64,7 +68,7 @@ void main_operation(int array_size){
   StaticJsonDocument<200> json_output;
   char json_serialized[200];
   json_output["timestamp"] = (uint64_t)timeClient.getEpochTime()*1000LL + (uint64_t)timeClient.get_millis();
-
+  json_output["type"] = "random_numbers";
   JsonArray numbers = json_output.createNestedArray("numbers");
   for(int i=0; i<array_size;i++){
     number = random(min_number, max_number);
@@ -81,9 +85,13 @@ void loop() {
   main_operation(10);
   mqtt_client.loop();
 
+  //ping("212.189.206.254", 100);
+  //Serial.println(heap_caps_get_total_size((1<31)-1));
+  //heap_caps_print_heap_info((1<31)-1);
+    
   if(!(mqtt_client.connected())){
     connect_mqtt();
   }
   
-  delay(5000);
+  delay(50);
 }
