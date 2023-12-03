@@ -15,7 +15,7 @@ void setup() {
     Serial.begin(115200);
     
     init_wifi();
-    configTime(2 * 60 * 60, 0, "pool.ntp.org", "time.google.com");
+    //configTime(2 * 60 * 60, 0, "pool.ntp.org", "time.google.com");
     timeClient.begin();
     timeClient.update();
 
