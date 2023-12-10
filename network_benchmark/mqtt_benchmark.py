@@ -58,8 +58,9 @@ def main():
     client.connect(MQTT_broker_IP, 1234, 60)
 
     with open("{}_mqtt_qos{}_benchmark_results".format(MQTT_broker_IP, qos), "a") as output_file:
-            reset_globals()
-            benchmark(output_file, client)
+            for _ in range(10):
+                reset_globals()
+                benchmark(output_file, client)
 
     client.disconnect()    
 

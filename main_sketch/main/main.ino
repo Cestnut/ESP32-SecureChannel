@@ -82,16 +82,14 @@ void main_operation(int array_size){
 }
 
 void loop() {
-  main_operation(10);
-  mqtt_client.loop();
-
-  //ping("212.189.206.254", 100);
-  //Serial.println(heap_caps_get_total_size((1<31)-1));
-  //heap_caps_print_heap_info((1<31)-1);
-    
-  if(!(mqtt_client.connected())){
-    connect_mqtt();
+  for(int i=0;i<101;i++){ 
+    main_operation(10);
+    mqtt_client.loop();
+    if(!(mqtt_client.connected())){
+      connect_mqtt();
+    }
+    delay(50);  
   }
   
-  delay(50);
+  delay(10000); 
 }
